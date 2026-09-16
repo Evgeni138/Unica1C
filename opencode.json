@@ -1,0 +1,16 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [".opencode/rules.md"],
+  "mcp": {
+    "unica": {
+      "type": "local",
+      "command": [
+        "C:\\Users\\popov\\.unica\\unica-marketplace\\plugins\\unica\\bootstrap\\bin\\win-x64\\unica-bootstrap.exe",
+        "run",
+        "--plugin-root",
+        "C:\\Users\\popov\\.unica\\unica-marketplace\\plugins\\unica"
+      ],
+      "enabled": true
+    }
+  }
+}
