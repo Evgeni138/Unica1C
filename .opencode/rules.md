@@ -5,106 +5,129 @@ MCP-сервер зарегистрирован в `opencode.json` под име
 
 ## Обязательное правило
 
-При выполнении любых задач, связанных с 1С:Предприятием, автоматически
-используй **соответствующие MCP-инструменты с префиксом `unica.`** вместо
-ручной правки файлов JSON/XML/BSL «как получится». Инструменты Unica
-валидируют изменения, учитывают стандарты и выполняют компиляцию.
+**Перед выполнением любых действий с метаданными или кодом 1С ОБЯЗАТЕЛЬНО
+вызывай соответствующий MCP-инструмент `unica.*`** — вместо ручной правки
+файлов JSON/XML/BSL «как получится».
 
-Детальные пошаговые инструкции по каждому навыку хранятся в
+Правила применения:
+
+- Метаданные (объекты, реквизиты, ТЧ, регистры) изменяются ТОЛЬКО через
+  `unica.meta.*`.
+- BSL-модули и код правится ТОЛЬКО через `unica.code.patch`; чтение и
+  навигация — через `unica.code.search`, `unica.code.outline`/`unica.code.graph`,
+  `unica.source.*`.
+- Формы, роли, СКД, макеты, подсистемы, интерфейс — только через свою группу
+  `unica.<категория>.*` (см. карту ниже).
+- Каждое изменение завершается валидацией/компиляцией своей группы и сборкой
+  `unica.build.make`.
+- При невозможности применить инструмент Unica — остановись и уточни причину,
+  не обходи правило ручной правкой.
+
+Детальные пошаговые инструкции по навыкам находятся в
 `.opencode/skills/<название>/SKILL.md` — при выборе навыка следуй им.
 
-## Карта инструментов `unica.<категория>.<действие>`
+## Карта инструментов (фактическая поверхность сервера Unica 0.12.3, 74 инструмента)
 
-| Категория | Доступные действия |
+| Категория | Действия |
 |---|---|
+| `unica.build` | `.make`, `.run`, `.dump`, `.load`, `.update` |
 | `unica.project` | `.map`, `.status` |
-| `unica.build` | сборка конфигурации/расширения |
-| `unica.runtime` | `.execute`, `.job` (запуск 1С, регламентные задания) |
-| `unica.code` | `.search`, `.patch`, `.diagnostics`, `.definition`, `.outline`, `.graph` |
+| `unica.runtime` | `.execute`, `.job.start`, `.job.status`, `.job.wait`, `.job.logs`, `.job.list`, `.job.cancel` |
 | `unica.meta` | `.add`, `.edit`, `.info`, `.remove` |
+| `unica.code` | `.search`, `.patch`, `.diagnostics`, `.definition`, `.outline`, `.graph` |
 | `unica.standards` | `.search`, `.explain` |
 | `unica.source` | `.read`, `.locate`, `.resolve`, `.resources`, `.children` |
 | `unica.form` | `.add`, `.edit`, `.remove`, `.compile`, `.info`, `.validate` |
 | `unica.dcs` | `.compile`, `.edit`, `.info`, `.validate` (СКД) |
-| `unica.cfe` | `.init`, `.borrow`, `.patch`, `.diff`, `.validate` (расширения) |
-| `unica.cf` | `.init`, `.edit`, `.info`, `.validate` (конфигурация) |
-| `unica.mxl` | `.compile`, `.decompile`, `.info`, `.validate` (макеты) |
-| `unica.role` | `.compile`, `.edit`, `.info`, `.validate` (роли) |
+| `unica.cfe` | `.init`, `.borrow`, `.patch_method`, `.diff`, `.validate` |
+| `unica.cf` | `.init`, `.edit`, `.info`, `.validate` |
+| `unica.mxl` | `.compile`, `.decompile`, `.info`, `.validate` |
+| `unica.role` | `.compile`, `.edit`, `.info`, `.validate` |
 | `unica.subsystem` | `.compile`, `.edit`, `.info`, `.validate` |
-| `unica.interface` | `.edit`, `.validate` (интерфейс командного интерфейса) |
+| `unica.interface` | `.edit`, `.validate` |
 | `unica.template` | `.add`, `.remove` |
-| `unica.epf` / `unica.erf` | `.init` (внешние обработки/отчёты) |
-| `unica.xdto` | `.edit`, `.info` (XDTO-пакеты) |
+| `unica.epf` / `unica.erf` | `.init` |
+| `unica.xdto` | `.edit`, `.info` |
 | `unica.documentation` | `.search`, `.get` |
-| `unica.help` | `.add` (справочная информация) |
-| `unica.support` | `.edit` (правила поддержки) |
+| `unica.help` | `.add` |
+| `unica.support` | `.edit` |
 
 ## Базовый протокол работы
 
-1. **Ориентация в проекте** — `unica.project.map`, `unica.project.status`,
-   чтение `v8project.yaml`, `unica.source.locate`.
-2. **Изучение метаданных** — `unica.meta.info`, `unica.source.children`.
-3. **Поиск кода** — `unica.code.search`, `unica.code.definition`, `unica.code.outline`.
-4. **Правка** — `unica.meta.edit`, `unica.code.patch`, `unica.form.edit`,
-   `unica.role.edit`, `unica.dcs.edit`, `unica.cfe.patch` и т.д.
-5. **Проверка/компиляция** — `unica.*.validate` и `unica.*.compile` для
-   изменённого объекта (форма, роль, СКД, MXL, подсистема).
-6. **Диагностика и стандарты** — `unica.code.diagnostics`, `unica.standards.search`.
-7. **Сборка и запуск** — `unica.build`, `unica.runtime.execute` / `unica.runtime.job`.
+1. `unica.project.map` → `unica.project.status` — определить конфигурацию/расширение и состояние проекта.
+2. `unica.source.locate` → чтение `v8project.yaml` — понять структуру и набор источников.
+3. `unica.meta.info` + `unica.source.children` — изучить целевые метаданные.
+4. `unica.code.search` → `unica.code.definition` / `unica.code.outline` — найти и локализовать код по задаче.
+5. Правка через профильную группу (`unica.meta.edit`, `unica.code.patch`, `unica.form.edit`, `unica.role.edit`, `unica.dcs.edit`, `unica.cfe.patch_method` ...).
+6. Диагностика и стандарты: `unica.code.diagnostics`, `unica.standards.search`.
+7. Валидация/компиляция изменённой группы, затем `unica.build.make`; при необходимости `unica.runtime.execute` / `unica.runtime.job.start`.
 
 ## Сценарии разработки
 
 ### Стандарты BSL
-- Проверяй код на соответствие стандартам: `unica.standards.search`,
-  `unica.standards.explain`, `unica.code.diagnostics`.
-- Исправляй замечания `unica.code.patch`; навык `code-diagnostics`,
-  `code-review`, `code-patch`.
+1. `unica.code.search` — найти проверяемый BSL-код.
+2. `unica.code.diagnostics` — прогон диагностик по модулю.
+3. `unica.standards.search` → `unica.standards.explain` — уточнить правило при замечании.
+4. `unica.code.patch` — применить исправления.
+5. `unica.code.diagnostics` — повторный прогон до чистого результата.
+6. `unica.build.make` (+ при необходимости `unica.runtime.execute`).
 
 ### Шаблоны БСП
-- При решении типовых задач опирайся на подсистемы БСП: `unica.code.search`
-  по общим модулям БСП, `unica.meta.info`, `unica.source.read`.
-- Навыки: `bsp-patterns`, `form-patterns`, `epf-bsp-init` (внешняя обработка на
-  БСП), `epf-bsp-add-command` (команда обработки», `form-events`, `object-events`.
+1. `unica.code.search` по общим модулям БСП — найти штатный механизм (`УправлениеПечатью`, `РаботаВМоделиСервиса` и т.п.).
+2. `unica.meta.info` — проверить доступность подсистем БСП в конфигурации.
+3. `unica.source.read` — изучить реализацию метода БСП.
+4. `unica.code.patch` — адаптировать вызов под задачу.
+5. `unica.code.diagnostics` → `unica.build.make`.
+6. Обработки на БСП: `unica.epf.init` (навык `epf-bsp-init`), добавление команды — навык `epf-bsp-add-command`.
 
 ### Работа с СКД
-- Редактирование схемы: `unica.dcs.edit`; компиляция: `unica.dcs.compile`;
-  анализ: `unica.dcs.info`; проверка: `unica.dcs.validate`.
-- Оптимизация запросов СКД: `unica.code.search`, навык `query-optimize`,
-  `dcs-compile`, `dcs-edit`, `dcs-info`, `dcs-validate`.
+1. `unica.dcs.info` — разобрать текущую схему компоновки.
+2. `unica.dcs.edit` — внести правки (наборы, группировки, отборы, вычисляемые поля).
+3. `unica.dcs.compile` — скомпилировать схему.
+4. `unica.dcs.validate` — валидация.
+5. При запросной оптимизации: `unica.code.search` + навык `query-optimize`.
+6. `unica.build.make` → при необходимости `unica.runtime.execute`.
 
 ### Создание расширений CFE
-- Создание расширения: `unica.cfe.init`; перенос объектов из поставки:
-  `unica.cfe.borrow`; патчи методов: `unica.cfe.patch`; сравнение:
-  `unica.cfe.diff`; проверка: `unica.cfe.validate`.
-- Работа с собственной конфигурацией через `unica.cf.init|edit|info|validate`.
-- Навыки: `cfe-init`, `cfe-borrow`, `cfe-patch-method`, `cfe-diff`,
-  `cfe-validate`, `cf-init`, `cf-edit`, `cf-info`, `cf-validate`.
+1. `unica.project.map` — определить расширение, в котором работаем (при отсутствии — `unica.cfe.init`).
+2. `unica.cfe.borrow` — перенести объекты из поставки.
+3. `unica.cfe.patch_method` — патчи методов / изменённые модули (в т.ч. формы).
+4. `unica.cfe.diff` — контроль расхождений с поставкой.
+5. `unica.build.make` — собрать расширение.
+6. `unica.cfe.validate` — финальная валидация расширения.
+7. Для основной конфигурации аналогично: `unica.cf.init|edit|info`, `unica.build.make`, `unica.cf.validate`.
 
-### Редактирование форм
-- Форма управляемая/обычная: `unica.form.add`, `unica.form.edit`,
-  `unica.form.remove`; компиляция формы: `unica.form.compile`;
-  проверка: `unica.form.validate`; анализ: `unica.form.info`.
-- Обработчики и события: навыки `form-events`, `object-events`, `form-patterns`.
-- Командный интерфейс и подсистемы: `unica.interface.edit|validate`,
-  `unica.subsystem.edit|compile|info|validate`.
+### Редактирование управляемых форм
+1. `unica.form.info` — изучить структуру формы.
+2. `unica.form.edit` — добавить/изменить элементы, реквизиты формы, команды (при создании формы — `unica.form.add`).
+3. `unica.code.patch` — правки модуля формы (если нужны обработчики; навыки `form-events`, `object-events`).
+4. `unica.form.compile` — компиляция формы.
+5. `unica.form.validate` — валидация.
+6. `unica.build.make` (при необходимость `unica.runtime.execute`).
+7. Командный интерфейс и подсистемы: `unica.interface.edit|validate`, `unica.subsystem.edit|compile|info|validate`.
 
 ### Макеты MXL
-- Открытие и анализ макета: `unica.mxl.info`, `unica.mxl.decompile`;
-  правка текстового DSL: `unica.mxl.compile`, проверка `unica.mxl.validate`.
-- Табличные документы и печатные формы через MXL-макеты. Навыки:
-  `mxl-compile`, `mxl-decompile`, `mxl-info`, `mxl-validate`.
+1. `unica.mxl.info` — получить данные макета.
+2. `unica.mxl.decompile` — разложить макет в текстовый DSL.
+3. Правка DSL (табличный документ/печатная форма) исходно руками в тексте.
+4. `unica.mxl.compile` — собрать макет.
+5. `unica.mxl.validate` — валидация.
+6. `unica.build.make` → при необходимости `unica.runtime.execute`.
 
 ### Роли и права
-- Правка/просмотр прав: `unica.role.edit`, `unica.role.info`;
-  компиляция: `unica.role.compile`; проверка: `unica.role.validate`.
-- Файлы ролей — `rights.xml` (DSL-описание в `role-compile/dsl-reference.md`).
-- Навыки: `role-compile`, `role-edit`, `role-info`, `role-validate`,
-  `db-auth-check`, `security-auth-crypto`.
+1. `unica.role.info` (`unica.role.edit`) — просмотр/правка прав роли.
+2. `unica.role.compile` — компиляция роли по DSL (`rights.xml`, справка в `.opencode/skills/role-compile/dsl-reference.md`).
+3. `unica.role.validate` — валидация.
+4. `unica.build.make` → при необходимости `unica.runtime.execute`.
+5. Проверка прав для пользователя/ИБ: навыки `db-auth-check`, `security-auth-crypto`.
 
-### Прочее
-- Метаданные: `unica.meta.add|edit|remove|info`; проектирование регистров —
-  навык `register-design`, `metadata-modeling`.
-- Внешние обработки/отчёты: `unica.epf.init`, `unica.erf.init`;
-  шаблоны: `unica.template.add|remove`; XDTO: `unica.xdto.edit|info`.
-- Запуск и диагностика: `unica.runtime.execute|job`, навыки `v8-runner`,
-  `db-performance`, `transactions-locks`, `log-analysis`, `code-diagnostics`.
+### Метаданные и проектирование
+1. `unica.meta.info` — анализ текущей структуры (регистры, документы, справочники; навыки `register-design`, `metadata-modeling`).
+2. `unica.meta.add` / `unica.meta.edit` / `unica.meta.remove` — изменение метаданных.
+3. `unica.source.children` / `unica.source.read` — просмотр связанных файлов.
+4. `unica.build.make` → `unica.cf.validate` (или `unica.cfe.validate`) → при необходимости `unica.runtime.execute`.
+
+### Запуск и диагностика
+1. `unica.build.make` → `unica.runtime.execute` (прогон платформы).
+2. `unica.runtime.job.start`/`.status`/`.wait`/`.logs` — регламентные/фоновые задания.
+3. `unica.code.diagnostics`, навыки `log-analysis`, `db-performance`, `transactions-locks`, `code-diagnostics`.
