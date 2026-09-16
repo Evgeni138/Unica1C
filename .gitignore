@@ -41,3 +41,15 @@ Thumbs.db
 *.user
 bin/
 obj/
+
+# Структура проекта: содержимое папок игнорируется (кроме .gitkeep)
+src/*
+!src/.gitkeep
+build/*
+!build/.gitkeep
+temp/*
+!temp/.gitkeep
+
+# Файловые базы и служебные файлы 1С (в любых папках)
+*.1cd
+*.tmp
