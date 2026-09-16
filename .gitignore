@@ -1,0 +1,43 @@
+# 1C:Enterprise
+*.log
+*.lgp
+*.lkp
+*.pfl
+*.epf
+*.erf
+*.cf
+*.cfl
+*.dt
+*.epf
+*.spx
+1Cv8.1CD
+1Cv8Log/
+1Cv8Temp/
+1Cv8CDLog/
+1Cv8ibLog/
+*.srv
+
+# Папки базы 1С (файловый вариант)
+*.1CD
+*.1Cb
+*.1CC
+*.1CLD
+
+# Резервные копии
+backup/
+*.bak
+*.zip
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+.TemporaryItems
+.FSEventsD
+
+# Среда разработки
+.vscode/
+.idea/
+*.suo
+*.user
+bin/
+obj/
